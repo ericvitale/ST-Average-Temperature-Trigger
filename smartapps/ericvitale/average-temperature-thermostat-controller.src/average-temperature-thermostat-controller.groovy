@@ -26,7 +26,7 @@ definition(
 
 preferences {
 	section("Select your thermostat.") {
-        input thermostat, "capability.thermostat", multiple:false, title: "Thermostat", required: true
+        input "thermostat", "capability.thermostat", multiple:false, title: "Thermostat", required: true
 	}
     
     section("Select your temperature sensors.") {
