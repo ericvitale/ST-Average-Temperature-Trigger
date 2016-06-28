@@ -34,19 +34,19 @@ preferences {
     }
     
     section("Select the temperature at which you want to begin cooling.") {
-    	input "maxTemp", "decimal", title: "Max Temperature", required: true, default: 80
+    	input "maxTemp", "decimal", title: "Max Temperature", range: "*", required: true
     }
     
     section("Select the temperature at which you want to cool to.") {
-    	input "coolingSetpoint", "decimal", title: "Cooling Setpoint", required: true, default: 65
+    	input "coolingSetpoint", "decimal", title: "Cooling Setpoint", range: "*", required: true
     }
     
     section("Select the temperature at which you want to begin heating.") {
-    	input "minTemp", "decimal", title: "Min Temperature", required: true, default: 60
+    	input "minTemp", "decimal", title: "Min Temperature", range: "*", required: true
     }
     
     section("Select the temperature at which you want to heat to.") {
-    	input "heatingSetpoint", "decimal", title: "Heating Setpoint", required: true, default: 70
+    	input "heatingSetpoint", "decimal", title: "Heating Setpoint", range: "*", required: true
     }
 }
 def installed() {
@@ -65,9 +65,6 @@ def initialize() {
     log.debug "AATC - Initialization complete."
 }
 
-////----------------------------Begin Event Handlers----------------------------////
-
-//Event raised when the temperature of the capability.temperatureMeasurement <temperature> changes
 def temperatureHandler(evt) {
 	log.debug "ATTC - Temperature Event Description: ${evt.descriptionText}."
     log.debug "ATTC - Temperature Event Value: ${evt.doubleValue}."
@@ -105,7 +102,6 @@ def temperatureHandler(evt) {
     	log.debug "ATTC - Temperature is just right."
     }
 }
-////-----------------------------End Event Handlers-----------------------------////
 
 def beginCooling(val) {
 	log.debug "ATTC - Setting coolingSetpoint to: ${val}."
