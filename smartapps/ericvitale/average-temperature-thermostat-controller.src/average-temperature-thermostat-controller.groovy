@@ -73,7 +73,7 @@ def temperatureHandler(evt) {
     def currentState
     
     temperatureSensors.each() {
-    	log.debug "ATTC - Temp: ${it.currentValue("temperature")}."	
+    	log.debug "ATTC - ${it.displayName} Temp: ${it.currentValue("temperature")}."	
         
         currentState = it.currentState("temperature")
         
