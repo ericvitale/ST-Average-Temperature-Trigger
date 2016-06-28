@@ -109,10 +109,10 @@ def temperatureHandler(evt) {
 
 def beginCooling(val) {
 	log.debug "ATTC - Setting coolingSetpoint to: ${val}."
-    thermostat.coolingSetpoint(val)
+    thermostat.setCoolingSetpoint(val)
 }
 
 def beginHeating(val) {
 	log.debug "ATTC - Setting heatingSetpoint to: ${val}."
-	thermostat.heatingSetpoint(val)
+	thermostat.setHeatingSetpoint(val)
 }
