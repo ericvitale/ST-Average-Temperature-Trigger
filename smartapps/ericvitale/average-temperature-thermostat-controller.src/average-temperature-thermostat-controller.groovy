@@ -117,8 +117,10 @@ def updateTemp() {
     }
     
     if(setVirtualTemp) {
-    	log.debug "ATTC - Updating virtual sensor."
-    	settableSensor.setTemperature(averageTemp)
+    	log.debug "ATTC - Raw average ${averageTemp}."
+        log.debug "ATTC - Updating virtual sensor to ${Math.round(averageTemp * 100) / 100}."
+        
+    	settableSensor.setTemperature((Math.round(averageTemp * 100) / 100).toString())
     }
 }
 
