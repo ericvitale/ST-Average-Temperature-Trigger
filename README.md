@@ -1,5 +1,8 @@
 # ST-AverageTemperatureThermostatController
-This SmartThings SmartApp uses the average temperature of your temperature sensors and decides based on input to set your thermostat.
+This SmartThings SmartApp uses the average temperature of your temperature sensors and decides based on input to either set your thermostat or simply update the temperature of a virtual temperature sensor. 
+
+If using the virtual sensor, you will need to create a virtual device and use this custom device type.
+https://github.com/ericvitale/ST-AverageTemperatureThermostatController/blob/master/devicetypes/ericvitale/settable-temperature-sensor.src/settable-temperature-sensor.groovy
 
 Use this app at your own risk.
 
