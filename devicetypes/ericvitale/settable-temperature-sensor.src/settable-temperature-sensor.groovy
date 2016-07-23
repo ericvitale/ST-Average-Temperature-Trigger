@@ -8,7 +8,7 @@ metadata {
 		capability "Temperature Measurement"
 		capability "Sensor"
         
-        command "setTemperature", ["number"]
+        command "setTemperature", ["string"]
 	}
     
     preferences {
@@ -130,7 +130,7 @@ private String parseValue(String description) {
 }
 
 def setTemperature(val) {
-	log("Setting temperature from external input, temperature = ${val}.", "DEBUG")
+    log.debug "Setting temperature for ${device.displayName} from external input, temperature = ${val}."
 	sendEvent(name: "temperature", value: val, unit: getTemperatureScale())
 }
 
@@ -139,5 +139,6 @@ def refresh() {
 }
 
 def updated() {
-	log("Updated", "DEBUG")
+	log("Updated -- ${device.displayName} is ${device.currentState("temperature")}.", "DEBUG")
+   
 }
