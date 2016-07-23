@@ -25,8 +25,14 @@ definition(
 
 
 preferences {
+	section("Settable Sensor") {
+    	input "settableSensor", "capability.temperatureMeasurement", title: "Virtual Settable Temperature Sensor", multiple: false, required: false
+        input "setVirtualTemp", "bool", title: "Set virtual temp based on average temp?", required: true, defaultValue: false
+    }
+
 	section("Select your thermostat.") {
-        input "thermostat", "capability.thermostat", multiple:false, title: "Thermostat", required: true
+        input "thermostat", "capability.thermostat", multiple:false, title: "Thermostat", required: false
+        input "setThermostat", "bool", title: "Set your thermostate temp based on average temp?", required: true, defaultValue: false
 	}
     
     section("Select your temperature sensors.") {
@@ -34,19 +40,19 @@ preferences {
     }
     
     section("Select the temperature at which you want to begin cooling.") {
-    	input "maxTemp", "decimal", title: "Max Temperature", range: "*", required: true
+    	input "maxTemp", "decimal", title: "Max Temperature", range: "*", required: false
     }
     
     section("Select the temperature at which you want to cool to.") {
-    	input "coolingSetpoint", "decimal", title: "Cooling Setpoint", range: "*", required: true
+    	input "coolingSetpoint", "decimal", title: "Cooling Setpoint", range: "*", required: false
     }
     
     section("Select the temperature at which you want to begin heating.") {
-    	input "minTemp", "decimal", title: "Min Temperature", range: "*", required: true
+    	input "minTemp", "decimal", title: "Min Temperature", range: "*", required: false
     }
     
     section("Select the temperature at which you want to heat to.") {
-    	input "heatingSetpoint", "decimal", title: "Heating Setpoint", range: "*", required: true
+    	input "heatingSetpoint", "decimal", title: "Heating Setpoint", range: "*", required: false
     }
 }
 def installed() {
@@ -62,6 +68,7 @@ def updated() {
 
 def initialize() {
 	subscribe(temperatureSensors, "temperature", temperatureHandler)
+    updateTemp()
     log.debug "AATC - Initialization complete."
 }
 
@@ -69,6 +76,10 @@ def temperatureHandler(evt) {
 	log.debug "ATTC - Temperature Event Description: ${evt.descriptionText}."
     log.debug "ATTC - Temperature Event Value: ${evt.doubleValue}."
     
+    updateTemp()
+}
+
+def updateTemp() {
     def averageTemp = 0.0
     def currentState
     
@@ -94,12 +105,20 @@ def temperatureHandler(evt) {
     	log.debug e
     }
     
-    if(averageTemp > maxTemp) {
-    	beginCooling(coolingSetpoint)
-    } else if(averageTemp < minTemp) {
-    	beginHeating(heatingSetpoint)
-    } else {
-    	log.debug "ATTC - Temperature is just right."
+    if(setThermostat) {
+    	log.debug "ATTC - Setting Thermostate"
+        if(averageTemp > maxTemp) {
+            beginCooling(coolingSetpoint)
+        } else if(averageTemp < minTemp) {
+            beginHeating(heatingSetpoint)
+        } else {
+            log.debug "ATTC - Temperature is just right."
+        }
+    }
+    
+    if(setVirtualTemp) {
+    	log.debug "ATTC - Updating virtual sensor."
+    	settableSensor.setTemperature(averageTemp)
     }
 }
 
