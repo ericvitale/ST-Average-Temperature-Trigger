@@ -30,7 +30,7 @@ metadata {
 
 	// UI tile definitions
 	tiles {
-		valueTile("temperature", "device.temperature", width: 2, height: 2) {
+		valueTile("temperature", "device.temperature", width: 3, height:2) {
 			state("temperature", label:'${currentValue}°',
 				backgroundColors:[
                     // Celsius Color Range
