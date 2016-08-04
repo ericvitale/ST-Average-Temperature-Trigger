@@ -241,19 +241,25 @@ def updateTemp() {
     if(controlFan){
     	log("Evaluating fan rules...", "INFO")
         
-        if(averageTemp > maxTemp) {
-        	log("Turning on fan in order to cool to: ${coolingSetpoint}.", "INFO")
-            turnFanOn()
-        } else if(averageTemp < minTemp) {
-	        log("Turning on fan in order to heat to: ${heatingSetpoint}.", "INFO")
-            turnFanOn()
-        } else {
-        	if(thermostat.thermostatFanMode == "on") {
-	            turnFanAuto()
-                log("Turning fan to auto.", "INFO")
+        if(thermostat.thermostatMode == "auto" || thermostat.thermostatMode == "off") {
+        
+            if(averageTemp > maxTemp) {
+                log("Turning on fan in order to cool to: ${coolingSetpoint}.", "INFO")
+                turnFanOn()
+            } else if(averageTemp < minTemp) {
+                log("Turning on fan in order to heat to: ${heatingSetpoint}.", "INFO")
+                turnFanOn()
+            } else {
+                if(thermostat.thermostatFanMode == "on") {
+                    turnFanAuto()
+                    log("Turning fan to auto.", "INFO")
+                }
+
+                log("Temperature is just right.", "INFO")
             }
             
-            log("Temperature is just right.", "INFO")
+    	} else {
+        	log("You are already in a running mode of ${thermostat.thermostatMode}, ignoring your fan control request.", "INFO")
         }
     }
     
