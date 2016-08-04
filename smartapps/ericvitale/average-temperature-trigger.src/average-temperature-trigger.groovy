@@ -1,6 +1,9 @@
 /**
  *  Average Temperature Trigger
  *
+ *  Version 1.0.2 - 08/04/14
+ *   -- Added the ability to just control an HVAC fan based on average temperature.
+ *   -- Now a parent child app for multiple automations.
  *  Version 1.0.1 - 07/24/16
  *   -- Added proper logging to make the app less verbose.
  *   -- Added the active setting.
@@ -25,7 +28,7 @@
  */
  
 definition(
-    name: "Average Temperature Trigger",
+    name: "${appName()}",
     namespace: "ericvitale",
     author: "Eric Vitale",
     description: "Control a thermostat or update a virtual temperature reporting device based on the average temperature of temperature sensors.",
@@ -36,97 +39,155 @@ definition(
 
 
 preferences {
-	section("Settable Sensor") {
-    	input "settableSensor", "capability.temperatureMeasurement", title: "Virtual Settable Temperature Sensor", multiple: false, required: false
-        input "setVirtualTemp", "bool", title: "Set virtual temp based on average temp?", required: true, defaultValue: false
-    }
+    page(name: "startPage")
+    page(name: "parentPage")
+    page(name: "childStartPage")
+}
 
-	section("Select your thermostat.") {
-        input "thermostat", "capability.thermostat", multiple:false, title: "Thermostat", required: false
-        input "setThermostat", "bool", title: "Set your thermostate temp based on average temp?", required: true, defaultValue: false
-	}
-    
-    section("Select your temperature sensors.") {
-    	input "temperatureSensors", "capability.temperatureMeasurement", multiple: true
+def startPage() {
+    if (parent) {
+        childStartPage()
+    } else {
+        parentPage()
     }
-    
-    section("Select the temperature at which you want to begin cooling.") {
-    	input "maxTemp", "decimal", title: "Max Temperature", range: "*", required: false
+}
+
+def parentPage() {
+	return dynamicPage(name: "parentPage", title: "", nextPage: "", install: false, uninstall: true) {
+        section("Create a new child app.") {
+            app(name: "childApps", appName: appName(), namespace: "ericvitale", title: "New Temperature Automation", multiple: true)
+        }
     }
-    
-    section("Select the temperature at which you want to cool to.") {
-    	input "coolingSetpoint", "decimal", title: "Cooling Setpoint", range: "*", required: false
-    }
-    
-    section("Select the temperature at which you want to begin heating.") {
-    	input "minTemp", "decimal", title: "Min Temperature", range: "*", required: false
-    }
-    
-    section("Select the temperature at which you want to heat to.") {
-    	input "heatingSetpoint", "decimal", title: "Heating Setpoint", range: "*", required: false
-    }
-    
-    section("Setting") {
+}
+
+def childStartPage() {
+	return dynamicPage(name: "childStartPage", title: "", install: true, uninstall: true) {
+        section("Settable Sensor") {
+            input "settableSensor", "capability.temperatureMeasurement", title: "Virtual Settable Temperature Sensor", multiple: false, required: false
+            input "setVirtualTemp", "bool", title: "Set virtual temp based on average temp?", required: true, defaultValue: false
+        }
+
+        section("Select your thermostat.") {
+            input "thermostat", "capability.thermostat", multiple:false, title: "Thermostat", required: false
+            input "setThermostat", "bool", title: "Set your thermostate temperature based on average temperature?", required: true, defaultValue: false
+            input "controlFan", "bool", title: "Turn on your HVAC fan based on an average temperature?", required: true, defaultValue: false
+        }
+
+        section("Select your temperature sensors.") {
+            input "temperatureSensors", "capability.temperatureMeasurement", multiple: true
+        }
+
+        section("Select the temperature at which you want to begin cooling.") {
+            input "maxTemp", "decimal", title: "Max Temperature", range: "*", required: false
+        }
+
+        section("Select the temperature at which you want to cool to.") {
+            input "coolingSetpoint", "decimal", title: "Cooling Setpoint", range: "*", required: false
+        }
+
+        section("Select the temperature at which you want to begin heating.") {
+            input "minTemp", "decimal", title: "Min Temperature", range: "*", required: false
+        }
+
+        section("Select the temperature at which you want to heat to.") {
+            input "heatingSetpoint", "decimal", title: "Heating Setpoint", range: "*", required: false
+        }
+
+        section("Setting") {
         	label(title: "Assign a name", required: false)
             input "active", "bool", title: "Rules Active?", required: true, defaultValue: true
             input "logging", "enum", title: "Log Level", required: true, defaultValue: "DEBUG", options: ["TRACE", "DEBUG", "INFO", "WARN", "ERROR"]
         }
+    }
 }
 
-def determineLogLevel(data) {
-	if(data.toUpperCase() == "TRACE") {
-    	return 0
-    } else if(data.toUpperCase() == "DEBUG") {
-    	return 1
-    } else if(data.toUpperCase() == "INFO") {
-    	return 2
-    } else if(data.toUpperCase() == "WARN") {
-    	return 3
-    } else {
-    	return 4
+private def appName() { return "${parent ? "Temperature Automation" : "Average Temperature Trigger"}" }
+
+private determineLogLevel(data) {
+    switch (data?.toUpperCase()) {
+        case "TRACE":
+            return 0
+            break
+        case "DEBUG":
+            return 1
+            break
+        case "INFO":
+            return 2
+            break
+        case "WARN":
+            return 3
+            break
+        case "ERROR":
+        	return 4
+            break
+        default:
+            return 1
     }
 }
 
 def log(data, type) {
-    
-    data = "ATTC -- " + data
-    
-    try {
-        if(determineLogLevel(type) >= determineLogLevel(logging)) {
-            if(type.toUpperCase() == "TRACE") {
+    data = "ATT -- ${data ?: ''}"
+        
+    if (determineLogLevel(type) >= determineLogLevel(settings?.logging ?: "INFO")) {
+        switch (type?.toUpperCase()) {
+            case "TRACE":
                 log.trace "${data}"
-            } else if(type.toUpperCase() == "DEBUG") {
+                break
+            case "DEBUG":
                 log.debug "${data}"
-            } else if(type.toUpperCase() == "INFO") {
+                break
+            case "INFO":
                 log.info "${data}"
-            } else if(type.toUpperCase() == "WARN") {
+                break
+            case "WARN":
                 log.warn "${data}"
-            } else if(type.toUpperCase() == "ERROR") {
+                break
+            case "ERROR":
                 log.error "${data}"
-            } else {
-                log.error "ATTC -- Invalid Log Setting -->${type}<--."
-            }
+                break
+            default:
+                log.error "ATT -- Invalid Log Setting"
         }
-    } catch(e) {
-    	log.error ${e}
     }
 }
 
 def installed() {
 	log("Installed with settings: ${settings}", "INFO")
-	initialize()
+	initialization()
 }
 
 def updated() {
 	log("Updated with settings: ${settings}", "INFO")
 	unsubscribe()
-	initialize()
+	initialization()
 }
 
-def initialize() {
+def initialization() {
+	log.debug "Begin initialization()."
+    
+    if(parent) { 
+    	initChild() 
+    } else {
+    	initParent() 
+    }
+    
+    log.debug "End initialization()."
+}
+
+def initParent() {
+	log.debug "initParent()"
+}
+
+def initChild() {
 	if(active) {
 		log("App is active.", "INFO")
         subscribe(temperatureSensors, "temperature", temperatureHandler)
+        
+        if(controlFan && setThermostat) {
+        	log("You cannot control a thermostat and an HVAC fan with the same automation. Install another. Defaulting to thermostat.", "WARN")
+            controlFan = false
+        }
+        
 	    updateTemp()
     } else {
     	log("App is not active.", "INFO")
@@ -177,6 +238,25 @@ def updateTemp() {
         }
     }
     
+    if(controlFan){
+    	log("Evaluating fan rules...", "INFO")
+        
+        if(averageTemp > maxTemp) {
+        	log("Turning on fan in order to cool to: ${coolingSetpoint}.", "INFO")
+            turnFanOn()
+        } else if(averageTemp < minTemp) {
+	        log("Turning on fan in order to heat to: ${heatingSetpoint}.", "INFO")
+            turnFanOn()
+        } else {
+        	if(thermostat.thermostatFanMode == "on") {
+	            turnFanAuto()
+                log("Turning fan to auto.", "INFO")
+            }
+            
+            log("Temperature is just right.", "INFO")
+        }
+    }
+    
     if(setVirtualTemp) {
         log("Updating ${settableSensor.label} to ${Math.round(averageTemp * 100) / 100}.", "INFO")
     	settableSensor.setTemperature((Math.round(averageTemp * 100) / 100).toString())
@@ -191,4 +271,12 @@ def beginCooling(val) {
 def beginHeating(val) {
 	log("Setting heatingSetpoint to: ${val}.", "DEBUG")
 	thermostat.setHeatingSetpoint(val)
+}
+
+def turnFanOn() {
+	thermostat.fanOn()
+}
+
+def turnFanAuto() {
+	thermostat.fanAuto()
 }
